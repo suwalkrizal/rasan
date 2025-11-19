@@ -36,7 +36,7 @@ class OrderDetailAPIView(APIView):
         order = self.get_object(pk)
         if not order:
             return Response({'error': 'Order not found'}, status=404)
-        serializer = OrderSerializer(order, data=request.data)
+        serializer = OrderSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
