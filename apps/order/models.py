@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 from apps.rasan.models import Product, FamilyPackage
+# from django.db.models.signals import post_save
+# from django.dispatch import receiver
 
 
 
@@ -28,10 +30,12 @@ class Order(models.Model):
     total_amount = models.FloatField(null=True, blank=True)
 
     def get_total_amount(self):
-        return sum(item.quantity * item.unit_price for item in self.order_items.all())
+        return sum(item.quantity * item.unit_price for item in self.items.all())
+    
+# @receiver(post_save, sender='order')
 
     def save(self, *args, **kwargs):
-        if not self.total_amount:
+        if self.total_amount is None:
             self.total_amount = self.get_total_amount()
         super().save(*args, **kwargs)
 
@@ -39,7 +43,7 @@ class Order(models.Model):
         db_table = '"order"."order"'
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_items')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     unit_price = models.FloatField(null=True, blank=True)
