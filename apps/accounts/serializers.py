@@ -1,18 +1,30 @@
 from rest_framework import serializers
 from .models import User
-from djoser.serializers import UserCreateSerializer, UserSerializer as DjoserUserSerializer
+from django.contrib.auth import authenticate
 
-class CustomUserCreateSerializer(UserCreateSerializer):
-    phone = serializers.CharField(required=False, allow_blank=True)
-    address = serializers.CharField(required=False, allow_blank=True)
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
 
-    class Meta(UserCreateSerializer.Meta):
+    class Meta:
         model = User
-        fields = ('id', 'username', 'password', 'email', 'phone', 'address')
+        fields = ('id', 'username', 'email', 'password', 'phone', 'address')
 
-class CustomUserSerializer(DjoserUserSerializer):
-    phone = serializers.CharField(required=False, allow_blank=True)
-    address = serializers.CharField(required=False, allow_blank=True)
-    class Meta(DjoserUserSerializer.Meta):
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
+    
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        user = authenticate(email=data['email'], password=data['password'])
+        if not user:
+            raise serializers.ValidationError("Invalid email or password")
+        return user
+    
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'role', 'phone', 'address')
+        fields = ('id', 'username', 'email', 'role', 'phone', 'address') 
+    
